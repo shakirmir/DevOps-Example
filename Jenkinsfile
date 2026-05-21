@@ -2,11 +2,6 @@ node {
     // reference to maven
     // ** NOTE: This 'maven-3.9.6' Maven tool must be configured in the Jenkins Global Configuration.   
     def mvnHome = tool 'maven-3.9.6'
-
-    // holds reference to docker image
-    def dockerImage
-    // ip address of the docker private repository(nexus)
- 
     def dockerImageTag = "devopsexample${env.BUILD_NUMBER}"
     
     stage('Clone Repo') { // for display purposes
@@ -24,8 +19,8 @@ node {
     }
 		
     stage('Build Docker Image') {
-      // build docker image
-      dockerImage = docker.build("devopsexample:${env.BUILD_NUMBER}")
+      // build docker image using shell command
+      sh "docker build -t devopsexample:${env.BUILD_NUMBER} ."
     }
    	  
     stage('Deploy Docker Image and login'){
