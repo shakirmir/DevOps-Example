@@ -2,7 +2,7 @@ node {
     // reference to maven
     // ** NOTE: This 'maven-3.9.6' Maven tool must be configured in the Jenkins Global Configuration.   
     def mvnHome = tool 'maven-3.9.6'
-    def dockerImageTag = "devopsexample${env.BUILD_NUMBER}"
+    def dockerImageTag = "shakirdocker/myapplication:${env.BUILD_NUMBER}"
     
     stage('Clone Repo') { // for display purposes
       // Get some code from a GitHub repository
@@ -20,7 +20,7 @@ node {
 		
     stage('Build Docker Image') {
       // build docker image using shell command
-      sh "docker build -t devopsexample:${env.BUILD_NUMBER} ."
+      sh "docker build -t ${dockerImageTag} ."
     }
    	  
     stage('Deploy Docker Image and login'){
@@ -28,15 +28,12 @@ node {
       echo "Docker Image Tag Name: ${dockerImageTag}"
 	  
         sh "docker images"
-        sh "docker login -u vickeyyvickey -p Hello@123" // put PWD
+        withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+        }
 	
 }
     stage('Docker push'){
-       // docker images | awk '{print $3}' | awk 'NR==2'
-	// sh "docker images | awk '{print $3}' | awk 'NR==2'"
-	//sh echo "Enter the docker lattest imageID"
-	//sh "read imageid"
-	   sh "docker tag 90cc3c109088   vickeyyvickey/myapplication" //must change your name and tag no
-        sh "docker push   vickeyyvickey/myapplication"
+       sh "docker push ${dockerImageTag}"
   }
 }
