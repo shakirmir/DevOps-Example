@@ -13,33 +13,33 @@ to cultivate development and delivery of software inside standardized software p
 is called Docker Engine.
 
 # Using Jenkins with Docker
-First of all to use jenkins with docker, we will have to know that as we are running Jenkins inside a docker container, and we need access to docker to
-build our services images, so first of all let's build a Jenkins image with docker installed inside it. Let's check the dockerfile to 
-build this Jenkins image with docker inside, you will just have to put this file into any folder, and run the docker build command.
+To run Jenkins jobs that build Docker images, Jenkins itself needs the Docker CLI and access to the host Docker daemon. The cleanest setup is a custom Jenkins image plus a mounted Docker socket.
 
 # Dockerfile for Jenkins
-```
-from jenkins/jenkins:lts
-USER root
-RUN apt-get update -qq \
-    && apt-get install -qqy apt-transport-https ca-certificates curl gnupg2 software-properties-common
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-RUN add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/debian \
-   $(lsb_release -cs) \
-   stable"
-RUN apt-get update  -qq \
-    && apt-get install docker-ce=17.12.1~ce-0~debian -y
-RUN usermod -aG docker jenkins
+Use the `JenkinsDockerfile` in this repository:
+
+```bash
+docker build -f JenkinsDockerfile -t jenkins-docker .
 ```
 
-Just place this Dockerfile in any folder and run the following commands:
+Run Jenkins with the Docker socket mounted:
 
-$ docker image build -t jenkins-docker .
+```bash
+docker rm -f vibrant_pare
+docker run -d \
+  --name jenkins \
+  -p 8080:8080 \
+  -p 50000:50000 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v jenkins_home:/var/jenkins_home \
+  jenkins-docker
+```
 
-Now that the docker image has already been built, we can run the Jenkins in a docker container with the command:
+If the host user cannot run Docker directly, add it to the `docker` group and log back in:
 
-$ docker container run -d -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock jenkins-docker
+```bash
+sudo usermod -aG docker ubuntu
+```
 
 # Building Spring Boot Application
 The Sample application built here has the maven jar plugin, so in order to build that as a jar, we just have to do the command:
